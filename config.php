@@ -1,19 +1,15 @@
 <?php
 
-
-// ---- Update these to match your LIVE host's MySQL setup ----
-// Get these from cPanel/hPanel > MySQL Databases.
-// On most shared hosts, $DB_NAME and $DB_USER must be prefixed with your
-// hosting account name, e.g. 'youracct_krishidirect' and 'youracct_dbuser'
-// — plain 'krishidirect' / 'root' will NOT work outside localhost.
-$DB_HOST = 'localhost';
-$DB_NAME = 'krishidirect';
-$DB_USER = 'root';
-$DB_PASS = '';
+// ---- Reads from environment variables (Render) with local XAMPP fallback ----
+$DB_HOST    = getenv('DB_HOST')    ?: 'localhost';
+$DB_NAME    = getenv('DB_NAME')    ?: 'krishidirect';
+$DB_USER    = getenv('DB_USER')    ?: 'root';
+$DB_PASS    = getenv('DB_PASS')    ?: '';
+$DB_PORT    = getenv('DB_PORT')    ?: '3306';
 $DB_CHARSET = 'utf8mb4';
-// ------------------------------------------------------------
+// ------------------------------------------------------
 
-$dsn = "mysql:host=$DB_HOST;dbname=$DB_NAME;charset=$DB_CHARSET";
+$dsn = "mysql:host=$DB_HOST;port=$DB_PORT;dbname=$DB_NAME;charset=$DB_CHARSET";
 
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -24,21 +20,13 @@ $options = [
 try {
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
 } catch (PDOException $e) {
-    // Log the real error server-side; never show connection details
-    // (host, DB name, credentials context) to site visitors.
+    // In production, log this instead of echoing it
     error_log('Database connection failed: ' . $e->getMessage());
-    die('Something went wrong. Please try again later.');
+    die('Database connection failed. Please try again later.');
 }
 
 // Start session on every page that includes this file
 if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path'     => '/',
-        'secure'   => !empty($_SERVER['HTTPS']), // true once your site runs on https://
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
     session_start();
 }
 
