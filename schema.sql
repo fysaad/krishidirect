@@ -36,7 +36,8 @@ CREATE TABLE `cold_storage` (
   `Max_Sack_Capacity` int(11) NOT NULL,
   `Max_Cubic_Meter_Capacity` int(11) NOT NULL,
   `Current_Sack_Count` int(11) DEFAULT 0,
-  `Current_Cubic_Meter_Count` int(11) DEFAULT 0
+  `Current_Cubic_Meter_Count` int(11) DEFAULT 0,
+  PRIMARY KEY (`Storage_ID`)
 ) ;
 
 --
@@ -59,7 +60,8 @@ INSERT INTO `cold_storage` (`Storage_ID`, `Manager_ID`, `Facility_Name`, `Distri
 CREATE TABLE `dhaka_hub` (
   `Hub_ID` int(11) NOT NULL,
   `Hub_Name` varchar(255) NOT NULL,
-  `Location_Address_Dhaka` text NOT NULL
+  `Location_Address_Dhaka` text NOT NULL,
+  PRIMARY KEY (`Hub_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -86,7 +88,8 @@ CREATE TABLE `orders` (
   `Order_Quantity` decimal(12,2) NOT NULL,
   `Total_Amount` decimal(12,2) NOT NULL,
   `Order_Status` enum('Pending','Paid-Escrow','In-Transit','Completed','Disputed') DEFAULT 'Pending',
-  `Order_Date` timestamp NOT NULL DEFAULT current_timestamp()
+  `Order_Date` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`Order_ID`)
 ) ;
 
 --
@@ -128,7 +131,8 @@ CREATE TABLE `payment` (
   `Transaction_MFS_ID` varchar(255) NOT NULL,
   `Amount` decimal(12,2) NOT NULL,
   `Payment_Status` enum('Held-in-Escrow','Released','Refunded') DEFAULT 'Held-in-Escrow',
-  `Paid_At` timestamp NOT NULL DEFAULT current_timestamp()
+  `Paid_At` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`Payment_ID`)
 ) ;
 
 --
@@ -173,7 +177,8 @@ CREATE TABLE `product` (
   `Price_Per_KG` decimal(10,2) NOT NULL,
   `Harvest_Date` date NOT NULL,
   `Expiry_Date` date NOT NULL,
-  `Listing_Date` timestamp NOT NULL DEFAULT current_timestamp()
+  `Listing_Date` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`Product_ID`)
 ) ;
 
 --
@@ -212,7 +217,8 @@ CREATE TABLE `shipment` (
   `Truck_Plate_Number` varchar(20) NOT NULL,
   `Shipment_Status` enum('Pooling','Dispatched','Arrived_At_Hub') DEFAULT 'Pooling',
   `Dispatched_At` timestamp NULL DEFAULT NULL,
-  `Arrived_At_Hub_At` timestamp NULL DEFAULT NULL
+  `Arrived_At_Hub_At` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`Shipment_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -243,7 +249,8 @@ CREATE TABLE `storage_booking` (
   `Sacks_To_Store` int(11) NOT NULL,
   `Cubic_Meters_To_Occupy` int(11) NOT NULL,
   `Booking_Date` date NOT NULL,
-  `Status` enum('Active','Checked-Out') DEFAULT 'Active'
+  `Status` enum('Active','Checked-Out') DEFAULT 'Active',
+  PRIMARY KEY (`Booking_ID`)
 ) ;
 
 --
@@ -277,7 +284,8 @@ CREATE TABLE `users` (
   `NID_Number` varchar(17) DEFAULT NULL,
   `UAO_Verification_Token` varchar(100) DEFAULT NULL,
   `Created_At` timestamp NOT NULL DEFAULT current_timestamp(),
-  `Password` varchar(255) NOT NULL DEFAULT '1234'
+  `Password` varchar(255) NOT NULL DEFAULT '1234',
+  PRIMARY KEY (`User_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -397,20 +405,12 @@ INSERT INTO `users` (`User_ID`, `Name`, `Phone_Number`, `Role`, `District`, `Upa
 -- Indexes for table `cold_storage`
 --
 ALTER TABLE `cold_storage`
-  ADD PRIMARY KEY (`Storage_ID`),
   ADD KEY `fk_storage_manager` (`Manager_ID`);
-
---
--- Indexes for table `dhaka_hub`
---
-ALTER TABLE `dhaka_hub`
-  ADD PRIMARY KEY (`Hub_ID`);
 
 --
 -- Indexes for table `orders`
 --
 ALTER TABLE `orders`
-  ADD PRIMARY KEY (`Order_ID`),
   ADD KEY `fk_order_buyer` (`Buyer_ID`),
   ADD KEY `fk_order_product` (`Product_ID`),
   ADD KEY `fk_order_shipment` (`Shipment_ID`);
@@ -419,7 +419,6 @@ ALTER TABLE `orders`
 -- Indexes for table `payment`
 --
 ALTER TABLE `payment`
-  ADD PRIMARY KEY (`Payment_ID`),
   ADD UNIQUE KEY `Order_ID` (`Order_ID`),
   ADD UNIQUE KEY `Transaction_MFS_ID` (`Transaction_MFS_ID`);
 
@@ -427,14 +426,12 @@ ALTER TABLE `payment`
 -- Indexes for table `product`
 --
 ALTER TABLE `product`
-  ADD PRIMARY KEY (`Product_ID`),
   ADD KEY `fk_product_farmer` (`Farmer_ID`);
 
 --
 -- Indexes for table `shipment`
 --
 ALTER TABLE `shipment`
-  ADD PRIMARY KEY (`Shipment_ID`),
   ADD KEY `fk_shipment_driver` (`Driver_ID`),
   ADD KEY `fk_shipment_hub` (`Hub_ID`),
   ADD KEY `fk_shipment_farmer` (`Farmer_ID`);
@@ -443,7 +440,6 @@ ALTER TABLE `shipment`
 -- Indexes for table `storage_booking`
 --
 ALTER TABLE `storage_booking`
-  ADD PRIMARY KEY (`Booking_ID`),
   ADD KEY `fk_booking_storage` (`Storage_ID`),
   ADD KEY `fk_booking_farmer` (`Farmer_ID`);
 
@@ -451,7 +447,6 @@ ALTER TABLE `storage_booking`
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
-  ADD PRIMARY KEY (`User_ID`),
   ADD UNIQUE KEY `Phone_Number` (`Phone_Number`),
   ADD UNIQUE KEY `NID_Number` (`NID_Number`),
   ADD UNIQUE KEY `UAO_Verification_Token` (`UAO_Verification_Token`);
