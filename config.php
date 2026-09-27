@@ -1,13 +1,18 @@
 <?php
 
-// ---- Reads from environment variables (Render) with local XAMPP fallback ----
-$DB_HOST    = getenv('DB_HOST')    ?: 'localhost';
-$DB_NAME    = getenv('DB_NAME')    ?: 'krishidirect';
-$DB_USER    = getenv('DB_USER')    ?: 'root';
-$DB_PASS    = getenv('DB_PASS')    ?: '';
-$DB_PORT    = getenv('DB_PORT')    ?: '3306';
+
+// ---- These now come from Render's Environment Variables, not hardcoded ----
+// Set DB_HOST, DB_NAME, DB_USER, DB_PASS, DB_PORT in Render's dashboard
+// (Settings > Environment), matching the values Aiven gave you.
+$DB_HOST    = getenv('DB_HOST') ?: 'localhost';
+$DB_NAME    = getenv('DB_NAME') ?: 'krishidirect';
+$DB_USER    = getenv('DB_USER') ?: 'root';
+$DB_PASS    = getenv('DB_PASS') ?: '';
+$DB_PORT    = getenv('DB_PORT') ?: '3306';
 $DB_CHARSET = 'utf8mb4';
-// ------------------------------------------------------
+// The ?: fallback values only apply if the env var isn't set — safe to
+// leave 'localhost'/'root' there for when you run this locally with XAMPP.
+// ----------------------------------------------------------------------
 
 $dsn = "mysql:host=$DB_HOST;port=$DB_PORT;dbname=$DB_NAME;charset=$DB_CHARSET";
 
@@ -17,16 +22,31 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false, // use real prepared statements
 ];
 
+// Aiven requires SSL/TLS for all connections. This tells PDO to use it.
+// (Skipped automatically for local XAMPP where DB_HOST isn't set.)
+if (getenv('DB_HOST')) {
+    $options[PDO::MYSQL_ATTR_SSL_CA] = null;
+    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+}
+
 try {
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, $options);
 } catch (PDOException $e) {
-    // In production, log this instead of echoing it
+    // Log the real error server-side; never show connection details
+    // (host, DB name, credentials context) to site visitors.
     error_log('Database connection failed: ' . $e->getMessage());
-    die('Database connection failed. Please try again later.');
+    die('Something went wrong. Please try again later.');
 }
 
 // Start session on every page that includes this file
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']), // true once your site runs on https://
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 
